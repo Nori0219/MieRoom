@@ -4,9 +4,80 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>タイトル</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <title>MieRoom</title>
 </head>
 <body>
+  
+<div class="container ">
+        <h2 class="mb-4" >Rooms<span>ルーム一覧</span></h2>
+        <% unless Room.all.empty?  %>
+          <% @rooms.each do |room|%>
+          <div class="container border-start border-5 rounded border-primary bg-light my-4 " style="max-width: 500px;">
+            <div class="row justify-content-center ">
+              <!--<div class="col-6">-->
+                  <div class="row no-gutters pe-0">
+                      <div class="col-7 py-3 pe-0">
+                          <div class="body">
+                             <p class="fw-b"><%= room.name %></p>
+                              <div class="container mt-2 ps-0 pe-5">
+                                <div class="rounded px-3 d-flex justify-content-between align-items-center"
+                                style="
+                                  background-color: #f0f0f0; /* 薄い色 */border: 2px solid #007bff; /* ボーダー色 */
+                                "
+                                >
+                                  <div class="d-flex align-items-center">
+                                    <i class="fas fa-user mr-2 fs-1"></i> <!-- FontAwesome icon (change class as needed) -->
+                                  </div>
+                                  <div class="text-center">
+                                    <p class="mb-0">在室中</p>
+                                    <h1 class="mb-0">4</h1>
+                                  </div>
+                                </div>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="col-5 py-2 d-flex justify-content-between align-items-center ps-0">
+                          <img src="<%= room.image %>" alt=" image" class="img-fluid img-thumbnail" style="idth: auto; min-height: 96xp;" >
+                      </div>
+                  </div>
+              </div>
+          </div>
+           <% end %>
+        <% else %>
+        	<h4 class="text-center">ルームがありません</h4>
+        <% end %>
+         <div class="container border-start border-5 rounded-start border-primary bg-light  my-4" style="max-width: 500px;">
+          <div class="row justify-content-center ">
+            <!--<div class="col-6">-->
+                <div class="row no-gutters pe-0">
+                    <div class="col-7 py-3">
+                        <div class="body">
+                            <p class="fw-b">図書館2F自習室</p>
+                            <div class="container mt-2 ps-0">
+                              <div class="rounded px-3 d-flex justify-content-between align-items-center"
+                              style="
+                                background-color: #f0f0f0; /* 薄い色 */border: 2px solid #007bff; /* ボーダー色 */
+                              "
+                              >
+                                <div class="d-flex align-items-center">
+                                  <i class="fas fa-user mr-2 fs-1"></i> <!-- FontAwesome icon (change class as needed) -->
+                                </div>
+                                <div class="text-center">
+                                  <p class="mb-0">在室中</p>
+                                  <h1 class="mb-0">4</h1>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-5 py-2 ">
+                        <img src="/images/CountingStarCard.png" alt=" image" class="img-fluid img-thumbnail">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
   
 </body>
 </html>

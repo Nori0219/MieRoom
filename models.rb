@@ -16,10 +16,10 @@ end
 class User < ActiveRecord::Base
     has_secure_password
     validates :name,
-        presence: true,
+        presence: true
     validates :password,
         presence: true,
         length: {in: 4..10}
-    has_many :roomss 
+    has_many :rooms
     has_many :entryrecords
 end

@@ -1,0 +1,132 @@
+/**{*/
+/*  margin: 0;*/
+/*  padding: 0;*/
+/*}*/
+body {
+  background-color: #e9ecef;
+  /*background-color: #d3d3d3;*/
+}
+
+.clear{
+  clear: both;
+}
+
+
+.slide-toggle{
+  display: none;
+}
+
+.slidemenu{
+  font-family: arial, sans-serif;
+  max-width: 600px;
+  margin: 0px auto;
+  overflow: hidden;
+}
+
+.slidemenu label{
+  width: 25%;
+  text-align: center;
+  display: block;
+  float: left;
+  color: #333;
+  opacity: 0.2;
+}
+
+.slidemenu label:hover{
+  cursor: pointer;
+  color: #666;
+}
+
+.slidemenu label span{
+  display: block;
+  padding: 10px;    
+}
+
+.slidemenu label .custom-icon{
+  font-size: 20px;
+  border: solid 2px #333;
+  text-align: center;
+  height: 50px;
+  width: 50px;
+  display: block;
+  margin: 0 auto;
+  line-height: 50px;
+  border-radius: 50%;
+}
+
+
+/*Animations*/
+.slidemenu label, .slider .bar {
+  transition: all 500ms ease-in-out;
+  -webkit-transition: all 500ms ease-in-out;
+  -moz-transition: all 500ms ease-in-out;
+}
+
+/*Toggle*/
+
+.slidemenu .slide-toggle:checked + label{
+  opacity: 1;
+}
+
+h2 {
+  font-size: 30px;
+  font-size: 3rem;
+  position: relative;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+h2 span {
+  font-size: 18px;
+  font-size: 1.8rem;
+  display: block;
+}
+
+h2:before {
+  position: absolute;
+  bottom: 8px;
+  left: calc(50% - 30px);
+  width: 60px;
+  height: 5px;
+  content: '';
+  border-radius: 3px;
+  background: #fa4141;
+}
+
+
+/*ユーザーページ*/
+/*枠デザイン*/
+.profile_box {
+border-left: solid 2px #ff7d6e;
+border-right: solid 2px #ff7d6e;
+border-bottom: solid 10px #ff7d6e;
+border-radius: 10px;
+}
+.profile_box .box-title {
+font-size: 18px;
+line-height:1.8;
+background: #bf4b3d; /*タイトルの背景色*/
+padding: 4px;
+text-align: center;
+color: #FFF; /*文字色*/
+font-weight: bold;
+letter-spacing: 0.05em;
+border-radius: 10px 10px 0 0;
+}
+/*内容*/
+.profile_center{
+text-align: center;
+margin: 10px 15px 0 0;
+}
+/*プロフィール画像*/
+.profile_figure {
+width:100px;
+height:100px;
+border-radius: 50%; /*丸くする*/
+border: solid 3px #f2d0cb; /*枠線*/
+}
+/*名前*/
+/*.profile_name {*/
+/*padding: 15px 20px;*/
+/*font-weight:bold;*/
+/*}*/
