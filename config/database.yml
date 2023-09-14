@@ -1,7 +1,7 @@
 default_env: &default
   adapter: postgresql
   encoding: unicode
-  database: s_original
+  database: mieroom
 
 development:
   <<: *default
