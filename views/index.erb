@@ -13,13 +13,14 @@
         <h2 class="mb-4" >Rooms<span>ルーム一覧</span></h2>
         <% unless Room.all.empty?  %>
           <% @rooms.each do |room|%>
-          <div class="container border-start border-5 rounded border-primary bg-light my-4 " style="max-width: 500px;">
+          <div class="container border-start border-5 rounded border-primary bg-light my-4 shadow-sm" style="max-width: 500px;">
+            
             <div class="row justify-content-center ">
               <!--<div class="col-6">-->
                   <div class="row no-gutters pe-0">
                       <div class="col-7 py-3 pe-0">
                           <div class="body">
-                             <p class="fw-b"><%= room.name %></p>
+                             <p class="fw-bold"><a href="/room/:id" style="color: inherit;"><%= room.name %></a></p>
                               <div class="container mt-2 ps-0 pe-5">
                                 <div class="rounded px-3 d-flex justify-content-between align-items-center"
                                 style="

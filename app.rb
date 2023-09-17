@@ -113,3 +113,9 @@ post '/room/new' do
       redirect '/room/new'
     end
 end
+
+get '/room/:id' do
+  erb :room
+end
+
+
