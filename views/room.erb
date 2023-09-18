@@ -90,8 +90,13 @@
 			  <% end %>
 		    </div>
 		    <% end %>
-		    
-		    <h4 class="mb-3 fw-normal">--<%=@tody_date%> 以降の利用者--</h4>
+		    <h4 class="mb-3 fw-normal">
+			  <% if @tokyo_now.hour >= 7 %>
+			    --<%= @tody_date %> 以降の利用者--
+			  <% else %>
+			    --<%= @yesterday_morning_7am.strftime('%m/%d %H:%M') %>から<%= @tody_date %>までの利用者--
+			  <% end %>
+			</h4>
 		  	<% @todays_entry_records.each do |entry_record| %>
 		    <div class="col-auto mb-2 ">
 		      <div class=" d-flex align-items-center gap-1 p-1 pe-2 text-primary-emphasis  border rounded position-relative

@@ -59,6 +59,11 @@ get '/signup' do
   erb :sign_up
 end
 
+get '/signout' do
+  session[:user] = nil
+  redirect '/'
+end
+
 post '/signin' do
   user = User.find_by(name: params[:name])
     if user && user.authenticate(params[:password])
@@ -97,8 +102,13 @@ post '/signup' do
     
 end
 
-get '/user_record' do
+get '/user/record' do
+  @user_rooms = current_user.rooms
   erb :user_record
+end
+
+get '/table' do
+  erb :table
 end
 
 get '/room/new' do
@@ -136,13 +146,14 @@ get '/room/:id' do
   @room = Room.find(params[:id])
   
   # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
-  tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
-  today_morning_7am = tokyo_now.beginning_of_day + 7.hours
+  @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
+  @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
+  today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
   @tody_date=today_morning_7am.strftime('%m/%d %H:%M')
   puts "レコード表示開始時刻：#{today_morning_7am}"
 
-  # 日本時間の今日の朝7時以降の入室記録を取得
-  @todays_entry_records = @room.entry_records.where('created_at >= ?', today_morning_7am)
+  # 日本時間の昨日から今日の朝7時以降の入室記録を取得
+  @todays_entry_records = @room.entry_records.where('created_at >= ? AND created_at < ?',  today_morning_7am,@yesterday_morning_7am)
   # 現在在室中のレコードのみを取得
   @current_entry_records = @todays_entry_records.where(exit_time: nil)
    # ユーザーが最後に入室した記録を取得
@@ -156,7 +167,7 @@ post '/room/:id/entry' do
   if current_user
     user_id = current_user.id
   else
-    #ログインせずpostメソッドを叩いた時
+    #ログインせずpostメソッドを叩いた時,getメソッドでは出来た
     user_id = params[:user_id]
     puts "外部からentry処理を実行"
   end
