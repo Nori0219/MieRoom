@@ -148,12 +148,20 @@ get '/room/:id' do
   # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
   @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
   @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
-  today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
-  @tody_date=today_morning_7am.strftime('%m/%d %H:%M')
-  puts "レコード表示開始時刻：#{today_morning_7am}"
+  @tommorow_morning_7am = @tokyo_now.beginning_of_day + 1.day + 7.hours
+  # today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
+  start_of_day = @tokyo_now.beginning_of_day + 7.hours
+  @tody_date=start_of_day.strftime('%m/%d %H:%M')
+  puts "レコード表示開始時刻：#{start_of_day}"
 
   # 日本時間の昨日から今日の朝7時以降の入室記録を取得
-  @todays_entry_records = @room.entry_records.where('created_at >= ? AND created_at < ?',  today_morning_7am,@yesterday_morning_7am)
+  if @tokyo_now < start_of_day
+    # 日付が7:00未満の場合、前日から今日の範囲
+    @todays_entry_records = @room.entry_records.where('created_at >= ? AND created_at < ?',  @yesterday_morning_7am, start_of_day )
+  else
+    # 7:00以降の場合、今日から翌日の範囲
+    @todays_entry_records = @room.entry_records.where('created_at >= ? AND created_at < ?',  start_of_day , @tommorow_morning_7am)
+  end
   # 現在在室中のレコードのみを取得
   @current_entry_records = @todays_entry_records.where(exit_time: nil)
    # ユーザーが最後に入室した記録を取得

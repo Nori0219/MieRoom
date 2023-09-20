@@ -25,7 +25,8 @@
         <h3 class="profile_name mx-4 px-3"><%= current_user.name %></h3>
     </div>
 </div>
-<table id="target" class="table table-bordered">
+<% if @user_rooms%>
+<table id="target" class="table table-bordered table-striped">
   <thead>
     <th>Room</th><th>入室時刻</th><th>退室時刻</th><th>滞在時間</th>
   </thead>
@@ -34,16 +35,16 @@
       <% room.entry_records.where(user_id: current_user.id).each do |entry_record| %>
         <tr>
           <td><%= room.name %></td>
-          <td><%= entry_record.entry_time.in_time_zone('Asia/Tokyo').strftime('%m/%d %H:%M') %></td>
-          <td><%= entry_record.exit_time.in_time_zone('Asia/Tokyo').strftime('%m/%d %H:%M') %></td>
+          <td><%= entry_record.entry_time.present? ? entry_record.entry_time.in_time_zone('Asia/Tokyo').strftime('%m/%d %H:%M') : '' %></td>
+          <td><%= entry_record.exit_time.present? ? entry_record.exit_time.in_time_zone('Asia/Tokyo').strftime('%m/%d %H:%M') : '' %></td>
           <td>
             <% if entry_record.exit_time.present? %>
               <% duration = entry_record.exit_time - entry_record.entry_time %>
-          <% hours = duration / 3600 %>
-          <% minutes = (duration % 3600) / 60 %>
-          <%= "#{hours.to_i}h#{minutes.to_i}m" %>
+              <% hours = duration / 3600 %>
+              <% minutes = (duration % 3600) / 60 %>
+              <%= "#{hours.to_i}h#{minutes.to_i}m" %>
             <% else %>
-              在室中
+              未退室
             <% end %>
           </td>
         </tr>
@@ -51,19 +52,38 @@
     <% end %>
   </tbody>
 </table>
+<% else %>
+<p>入退ログがありません</p>
+<% end %>
     <script>
         jQuery(function($){
             $("#target").DataTable({
                 "language":{//日本語化
                     url:"https://cdn.datatables.net/plug-ins/1.11.5/i18n/ja.json",
                 },
-                ordering: false,// ソート機能 無効
-                searching:false,//絞り込み検索
+                // ordering: false,// ソート機能 無効
+                "order": [[ 1, "desc" ]],
+                // searching:false,//絞り込み検索
                 // info:false,//総件数
                 lengthChange:false,//表示件数
                 dom:"lBfrtip",//ボタン表示用
                 buttons:[//ボタンの種類（PDFはデフォルトでは日本語は文字化けする）
-                    'copy','pdf','csv','excel','print',
+                    {
+                        extend: 'copy',
+                        text: '<i class="fas fa-clipboard"></i> Copy'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-file-alt"></i> Print'
+                    },
+                    {
+                        extend: 'csv',
+                        text: '<i class="fas fa-file-excel"></i> Excel'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fas fa-file-pdf"></i> PDF'
+                    }
                 ],
             });
         });
