@@ -12,3 +12,4 @@ gem 'sinatra-contrib', '~> 2.1'
 gem 'webrick', '~> 1.7'
 
 gem 'cloudinary'
+gem 'line-bot-api'

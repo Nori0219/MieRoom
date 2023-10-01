@@ -39,11 +39,151 @@ before do
       config.api_secret = ENV['CLOUDINARY_API_SECRET']  
       config.secure = true
     end
-    if  request.path != '/signin' && request.path != '/signup' && current_user.nil?
+    if  request.path != '/signin' && request.path != '/signup' && request.path != '/callback' && current_user.nil?
       redirect '/signin'
       puts "ログインしていないユーザーがアクセス redirect:/signin"
     end
 end
+
+# ====== LINEBot ======
+def client
+  @client ||= Line::Bot::Client.new { |config|
+    config.channel_id = ENV["LINE_CHANNEL_ID"]
+    config.channel_secret = ENV["LINE_CHANNEL_SECRET"]
+    config.channel_token = ENV["LINE_CHANNEL_TOKEN"]
+  }
+end
+
+# post '/callback' do
+#   @message_context = {}
+#   body = request.body.read
+#   signature = request.env['HTTP_X_LINE_SIGNATURE']
+
+#   unless client.validate_signature(body, signature)
+#     error 400 do 'Bad Request' end
+#   end
+
+#   events = client.parse_events_from(body)
+#   events.each do |event|
+#     if event.is_a?(Line::Bot::Event::Message) && event.type == Line::Bot::Event::MessageType::Text
+#       user_message = event.message['text']
+
+#       if user_message == '部屋状況を確認する'
+#         # ユーザーが「入居者を確認する」というメッセージを送信した場合
+#         # コンテキストをセットして、ルーム名を入力してもらうように促すメッセージを送信
+#         @message_context[event.source['userId']] = :waiting_for_room_name
+#         message = {
+#           type: 'text',
+#           text: 'ルーム名を入力してください。'
+#         }
+#         client.reply_message(event['replyToken'], message)
+#       elsif @message_context[event.source['userId']] == :waiting_for_room_name
+#         # ユーザーがルーム名を送信した場合
+#         room_name = user_message
+
+#         # ルーム名を元にルームを検索
+#         room = Room.find_by(name: room_name)
+
+#         if room
+#           # ルームが見つかった場合、ルームの情報を返信
+#           message = {
+#             type: 'text',
+#             text: "ルーム名: #{room.name}, 在室人数: #{room.current_entry_records.count} 人"
+#           }
+#         else
+#           # ルームが見つからない場合の処理
+#           message = {
+#             type: 'text',
+#             text: '指定されたルームが見つかりませんでした。'
+#           }
+#         end
+
+#         # コンテキストをリセット
+#         @message_context[event.source['userId']] = nil
+#         client.reply_message(event['replyToken'], message)
+#       else
+#         # それ以外のメッセージは無視
+#         message = {
+#           type: 'text',
+#           text: event.message['text']
+#         }
+#           client.reply_message(event['replyToken'], message)
+#       end
+#     end
+#   end
+#   "OK"
+# end
+post '/callback' do
+  @message_context = {}
+  body = request.body.read
+  signature = request.env['HTTP_X_LINE_SIGNATURE']
+  unless client.validate_signature(body, signature)
+    error 400 do 'Bad Request' end
+  end
+  events = client.parse_events_from(body)
+  events.each do |event|
+    if event.is_a?(Line::Bot::Event::Message)
+      if event.type === Line::Bot::Event::MessageType::Text
+        user_message = event.message['text']
+  
+        if user_message == '部屋状況を確認する'
+          rooms = Room.all
+          # ルーム名を取得して改行で区切る
+          # ルーム名を取得して一覧形式のテキストを作成
+          room_list_text = "確認するルーム名を教えてください！\n【ルーム一覧】"
+          rooms.each do |room|
+            room_list_text += "\n#{room.name}"
+          end
+          message = {
+            type: 'text',
+            text: room_list_text
+          }
+          client.reply_message(event['replyToken'], message)
+        else
+            # ユーザーがルーム名を送信した場合
+            room_name = user_message
+            # ルーム名を元にルームを検索
+            room = Room.find_by(name: room_name)
+  
+            # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
+            @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
+            @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
+            @tommorow_morning_7am = @tokyo_now.beginning_of_day + 1.day + 7.hours
+            # today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
+            start_of_day = @tokyo_now.beginning_of_day + 7.hours
+            @tody_date=start_of_day.strftime('%m/%d %H:%M')
+            puts "レコード表示開始時刻：#{start_of_day}"
+            # 日本時間の昨日から今日の朝7時以降の入室記録を取得
+            if @tokyo_now < start_of_day
+              # 日付が7:00未満の場合、前日から今日の範囲
+              @todays_entry_records = room.entry_records.where('created_at >= ? AND created_at < ?',  @yesterday_morning_7am, start_of_day )
+            else
+              # 7:00以降の場合、今日から翌日の範囲
+              @todays_entry_records = room.entry_records.where('created_at >= ? AND created_at < ?',  start_of_day , @tommorow_morning_7am)
+            end
+            # 現在在室中のレコードのみを取得
+            @current_entry_records = @todays_entry_records.where(exit_time: nil)
+              roominfo_message = {
+                type: 'text',
+                text: 
+                "【#{room.name}】\n現在の在室人数は#{@current_entry_records.count}人です！"
+              }
+              client.reply_message(event['replyToken'], message)
+              pr_message = {
+                type: 'text',
+                text: 
+                "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
+              }
+              
+              messages = [roominfo_message, pr_message]
+              client.reply_message(event['replyToken'], messages)
+        end
+      end
+    end
+  end
+  "OK"
+end
+
 
 get '/' do
   @rooms = Room.all
