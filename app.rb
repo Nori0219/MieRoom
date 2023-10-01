@@ -10,6 +10,7 @@ require 'cloudinary'
 require 'cloudinary/uploader'
 require 'cloudinary/utils'
 require 'date'
+require 'line/bot'
 
 enable :sessions
 
@@ -242,3 +243,4 @@ get '/room/:id/exit' do
 
   redirect "/room/#{room_id}" 
 end
+
