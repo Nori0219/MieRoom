@@ -97,15 +97,15 @@ h2:before {
 /*ユーザーページ*/
 /*枠デザイン*/
 .profile_box {
-border-left: solid 2px #ff7d6e;
-border-right: solid 2px #ff7d6e;
-border-bottom: solid 10px #ff7d6e;
+border-left: solid 2px #FB6A6E;
+border-right: solid 2px #FB6A6E;
+border-bottom: solid 10px #FB6A6E;
 border-radius: 10px;
 }
 .profile_box .box-title {
 font-size: 18px;
 line-height:1.8;
-background: #bf4b3d; /*タイトルの背景色*/
+background: #FB6A6E; /*タイトルの背景色*/
 padding: 4px;
 text-align: center;
 color: #FFF; /*文字色*/
@@ -126,3 +126,23 @@ border-radius: 50%; /*丸くする*/
 border: solid 3px #f2d0cb; /*枠線*/
 }
 
+.form-signin {
+  max-width: 330px;
+  padding: 1rem;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
