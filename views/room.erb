@@ -47,11 +47,11 @@
 						</div>
 			</div>
 			<% if @latest_entry%>
-			<form action="/room/<%= @room.id %>/exit" method="post" class="mx-5  px-3 mb-3">
+			<form action="/room/<%= @room.id %>/exit" method="get" class="mx-5  px-3 mb-3">
 					<input class="form-control btn btn-warning rounded-pill" type="submit" value="退室する"> 
 			</form>
 			<% else %>
-			<form action="/room/<%= @room.id %>/entry" method="post" class="mx-5  px-3 mb-3">
+			<form action="/room/<%= @room.id %>/entry" method="get" class="mx-5  px-3 mb-3">
 					<input class="form-control btn btn-success rounded-pill" type="submit" value="入室する"> 
 			</form>
 			<% end %>

@@ -169,9 +169,20 @@ get '/room/:id' do
   erb :room
 end
 
+
+
 # /room/1/entry?user_id=2
-post '/room/:id/entry' do
+get '/room/:id/entry' do
   room_id = params[:id]
+  p room_id
+  room = Room.find_by(id: room_id)
+  
+  if room.nil?
+    # ルームが存在しない場合のエラーハンドリング
+    puts "指定されたルームが存在しません"
+    return 404
+  end
+  
   if current_user
     user_id = current_user.id
   else
@@ -179,30 +190,44 @@ post '/room/:id/entry' do
     user_id = params[:user_id]
     puts "外部からentry処理を実行"
   end
+  
+  latest_entry_record = room.entry_records.where(user_id: user_id, exit_time: nil).order(created_at: :desc).first
 
-  entry_record = EntryRecord.new(
-    user_id: user_id, 
-    room_id: room_id,
-    entry_time: Time.now # 現在の日時を入室時間として記録
-  )
-
-  if entry_record.save
-    puts "入室しました。"
+  if latest_entry_record
+     puts'すでに入室しています'
   else
-    puts "入室に失敗しました"
+      entry_record = EntryRecord.new(
+      user_id: user_id, 
+      room_id: room_id,
+      entry_time: Time.now # 現在の日時を入室時間として記録
+      )
+  
+      if entry_record.save
+        puts "入室しました。"
+      else
+        puts "入室に失敗しました"
+      end
   end
-
-  redirect "/room/#{room_id}" 
+  redirect "/room/#{room_id}"
 end
 
 
-post '/room/:id/exit' do
+get '/room/:id/exit' do
   room_id = params[:id]
-  user_id = current_user.id
+  p room_id
   room = Room.find_by(id: room_id)
-  unless room
-     puts '指定されたルームが存在しません。'
-    redirect '/rooms' # ルーム一覧にリダイレクト
+  
+  if room.nil?
+    # ルームが存在しない場合のエラーハンドリング
+    puts "指定されたルームが存在しません"
+    redirect '/rooms'
+  end
+  
+  if current_user
+    user_id = current_user.id
+  else
+    user_id = params[:user_id]
+    puts "外部からentry処理を実行"
   end
   # 最後に入室した記録を取得
   @latest_entry_record = room.entry_records.where(user_id: user_id, exit_time: nil).order(created_at: :desc).first
