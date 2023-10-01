@@ -54,65 +54,6 @@ def client
   }
 end
 
-# post '/callback' do
-#   @message_context = {}
-#   body = request.body.read
-#   signature = request.env['HTTP_X_LINE_SIGNATURE']
-
-#   unless client.validate_signature(body, signature)
-#     error 400 do 'Bad Request' end
-#   end
-
-#   events = client.parse_events_from(body)
-#   events.each do |event|
-#     if event.is_a?(Line::Bot::Event::Message) && event.type == Line::Bot::Event::MessageType::Text
-#       user_message = event.message['text']
-
-#       if user_message == '部屋状況を確認する'
-#         # ユーザーが「入居者を確認する」というメッセージを送信した場合
-#         # コンテキストをセットして、ルーム名を入力してもらうように促すメッセージを送信
-#         @message_context[event.source['userId']] = :waiting_for_room_name
-#         message = {
-#           type: 'text',
-#           text: 'ルーム名を入力してください。'
-#         }
-#         client.reply_message(event['replyToken'], message)
-#       elsif @message_context[event.source['userId']] == :waiting_for_room_name
-#         # ユーザーがルーム名を送信した場合
-#         room_name = user_message
-
-#         # ルーム名を元にルームを検索
-#         room = Room.find_by(name: room_name)
-
-#         if room
-#           # ルームが見つかった場合、ルームの情報を返信
-#           message = {
-#             type: 'text',
-#             text: "ルーム名: #{room.name}, 在室人数: #{room.current_entry_records.count} 人"
-#           }
-#         else
-#           # ルームが見つからない場合の処理
-#           message = {
-#             type: 'text',
-#             text: '指定されたルームが見つかりませんでした。'
-#           }
-#         end
-
-#         # コンテキストをリセット
-#         @message_context[event.source['userId']] = nil
-#         client.reply_message(event['replyToken'], message)
-#       else
-#         # それ以外のメッセージは無視
-#         message = {
-#           type: 'text',
-#           text: event.message['text']
-#         }
-#           client.reply_message(event['replyToken'], message)
-#       end
-#     end
-#   end
-#   "OK"
-# end
 post '/callback' do
   @message_context = {}
   body = request.body.read
@@ -264,7 +205,7 @@ post '/room/new' do
      img_url = upload['url']
      puts "Room_imageあり"
   else
-    img_url = url('/images/hito.png')
+    img_url = url('/images/room.png')
     puts "Room_imageなし"
   end
   
