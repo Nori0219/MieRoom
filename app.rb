@@ -71,29 +71,18 @@ post '/callback' do
           rooms = Room.all
           # ルーム名を取得して改行で区切る
           # ルーム名を取得して一覧形式のテキストを作成
-          room_list_text = "確認するルーム名を教えてください！\n【ルーム一覧】"
+          room_list_text = "現在の部屋状況はこちらです！\n【ルーム一覧】"
+          
+          # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
+          @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
+          @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
+          @tommorow_morning_7am = @tokyo_now.beginning_of_day + 1.day + 7.hours
+          # today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
+          start_of_day = @tokyo_now.beginning_of_day + 7.hours
+          @tody_date=start_of_day.strftime('%m/%d %H:%M')
+          puts "レコード表示開始時刻：#{start_of_day}"
+          
           rooms.each do |room|
-            room_list_text += "\n#{room.name}"
-          end
-          message = {
-            type: 'text',
-            text: room_list_text
-          }
-          client.reply_message(event['replyToken'], message)
-        else
-            # ユーザーがルーム名を送信した場合
-            room_name = user_message
-            # ルーム名を元にルームを検索
-            room = Room.find_by(name: room_name)
-  
-            # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
-            @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
-            @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
-            @tommorow_morning_7am = @tokyo_now.beginning_of_day + 1.day + 7.hours
-            # today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
-            start_of_day = @tokyo_now.beginning_of_day + 7.hours
-            @tody_date=start_of_day.strftime('%m/%d %H:%M')
-            puts "レコード表示開始時刻：#{start_of_day}"
             # 日本時間の昨日から今日の朝7時以降の入室記録を取得
             if @tokyo_now < start_of_day
               # 日付が7:00未満の場合、前日から今日の範囲
@@ -104,20 +93,61 @@ post '/callback' do
             end
             # 現在在室中のレコードのみを取得
             @current_entry_records = @todays_entry_records.where(exit_time: nil)
-              roominfo_message = {
-                type: 'text',
-                text: 
-                "【#{room.name}】\n現在の在室人数は#{@current_entry_records.count}人です！"
-              }
-              client.reply_message(event['replyToken'], message)
-              pr_message = {
-                type: 'text',
-                text: 
-                "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
-              }
-              
-              messages = [roominfo_message, pr_message]
-              client.reply_message(event['replyToken'], messages)
+            room_list_text += "\n#{room.name}：#{@current_entry_records.count}人"
+          end
+          
+          roominfo_message = {
+            type: 'text',
+            text: room_list_text
+          }
+          pr_message = {
+            type: 'text',
+            text: 
+            "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
+          }
+          messages = [roominfo_message, pr_message]
+          
+          client.reply_message(event['replyToken'], messages)
+        else
+            # ユーザーがルーム名を送信した場合
+            room_name = user_message
+            # ルーム名を元にルームを検索
+            room = Room.find_by(name: room_name)
+            
+            if room
+                
+              # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
+              @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
+              @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
+              @tommorow_morning_7am = @tokyo_now.beginning_of_day + 1.day + 7.hours
+              # today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
+              start_of_day = @tokyo_now.beginning_of_day + 7.hours
+              @tody_date=start_of_day.strftime('%m/%d %H:%M')
+              puts "レコード表示開始時刻：#{start_of_day}"
+              # 日本時間の昨日から今日の朝7時以降の入室記録を取得
+              if @tokyo_now < start_of_day
+                # 日付が7:00未満の場合、前日から今日の範囲
+                @todays_entry_records = room.entry_records.where('created_at >= ? AND created_at < ?',  @yesterday_morning_7am, start_of_day )
+              else
+                # 7:00以降の場合、今日から翌日の範囲
+                @todays_entry_records = room.entry_records.where('created_at >= ? AND created_at < ?',  start_of_day , @tommorow_morning_7am)
+              end
+              # 現在在室中のレコードのみを取得
+              @current_entry_records = @todays_entry_records.where(exit_time: nil)
+                roominfo_message = {
+                  type: 'text',
+                  text: 
+                  "【#{room.name}】\n現在の在室人数は#{@current_entry_records.count}人です！"
+                }
+                pr_message = {
+                  type: 'text',
+                  text: 
+                  "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
+                }
+                
+                messages = [roominfo_message, pr_message]
+                client.reply_message(event['replyToken'], messages)
+            end
         end
       end
     end
