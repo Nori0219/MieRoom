@@ -331,17 +331,27 @@ post '/room/entry' do
   end
   
   if current_user
-    line_uid = current_user.line_uid
+    user_id = current_user.id
   else
     #ログインせずpostメソッドを叩いた時,getメソッドでは出来た
     line_uid = params[:line_uid]
+    puts"line_uid:#{line_uid}"
+    
+    user = User.find_by(line_uid: line_uid)
+    if user
+      user_id = user.id
+      puts "ユーザーをLINEuidから見つけました"
+    else
+      puts "ユーザーが見つかりません"
+      redirect "/room/#{room_id}"
+    end
     puts "外部からentry処理を実行"
   end
   
-  latest_entry_record = room.entry_records.where(line_uid: line_uid, exit_time: nil).order(created_at: :desc).first
+  latest_entry_record = room.entry_records.where(user_id: user_id, exit_time: nil).order(created_at: :desc).first
 
   if latest_entry_record
-     puts'すでに入室しています'
+    puts'すでに入室しています'
   else
       entry_record = EntryRecord.new(
       user_id: user_id, 
@@ -370,17 +380,26 @@ post '/room/exit' do
   end
   
   if current_user
-    line_uid = current_user.line_uid
+    user_id = current_user.id
   else
     line_uid = params[:line_uid]
+    puts"line_uid:#{line_uid}"
+    user = User.find_by(line_uid: line_uid)
+    if user
+      user_id = user.id
+      puts "ユーザーをLINEuidから見つけました"
+    else
+      puts "ユーザーが見つかりません"
+      redirect "/room/#{room_id}"
+    end
     puts "外部からentry処理を実行"
   end
   # 最後に入室した記録を取得
-  @latest_entry_record = room.entry_records.where(line_uid: line_uid, exit_time: nil).order(created_at: :desc).first
+  latest_entry_record = room.entry_records.where(user_id: user_id, exit_time: nil).order(created_at: :desc).first
 
-  if @latest_entry_record
+  if latest_entry_record
     # 退室時間を記録
-    @latest_entry_record.update(exit_time: Time.now)
+    latest_entry_record.update(exit_time: Time.now)
      puts'退室しました'
   else
      puts '入室していないか、既に退室済みです'
