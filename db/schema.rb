@@ -36,7 +36,6 @@ ActiveRecord::Schema.define(version: 2023_09_17_233709) do
     t.string "line_uid"
     t.string "name"
     t.string "image"
-    t.string "password_digest"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end

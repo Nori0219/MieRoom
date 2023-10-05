@@ -14,12 +14,12 @@ class EntryRecord < ActiveRecord::Base
 end
 
 class User < ActiveRecord::Base
-    has_secure_password
+    # has_secure_password
     validates :name,
         presence: true
-    validates :password,
-        presence: true,
-        length: {in: 4..10}
+    # validates :password,
+    #     # presence: true,
+    #     length: {in: 4..10}
     has_many :entry_records
     has_many :rooms, :through => :entry_records
 

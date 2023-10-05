@@ -17,6 +17,10 @@
   
 <div class="container ">
        <h2 class="mb-4"><a href="/">Rooms<span>ルーム一覧</span></a></h2>
+      <!-- <div id="user-profile">-->
+      <!--  <img id="user-icon" src="" alt="User Icon">-->
+      <!--  <p id="user-name"></p>-->
+      <!--</div>-->
         <% unless Room.all.empty?  %>
           <% @rooms.each do |room|%>
           <div class="container border-start border-5 rounded border-primary bg-light my-4 shadow-sm" style="max-width: 500px;">
@@ -55,6 +59,61 @@
         	<h4 class="text-center">ルームがありません</h4>
         <% end %>
     </div>
-  
+  <script>
+  // LIFF ID を取得
+    // const liffId = process.env.LIFF_ID;
+    // console.log('liffId:', liffId);
+    // LIFFアプリの初期化
+    liff.init({ liffId: "2000904186-6yN4M2vP" })
+    .then(() => {
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            console.log('LINEログインしました');
+        } else {
+            // プロフィール取得
+            liff.getProfile()
+            .then(profile => {
+                const userName = profile.displayName;
+                const lineId = profile.userId;
+                const userIcon = profile.pictureUrl;
+                
+                console.log('line_name:', userName);
+                console.log('line_id:', lineId);
+                console.log('line_icon_url:', userIcon);
+            
+                // ユーザー名とアイコンを表示する要素にセット
+                // document.getElementById('user-name').textContent = userName;
+                // document.getElementById('user-icon').src = userIcon;
+            
+                // ユーザー情報をサーバーに送信
+                fetch('/line_login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        line_name: userName,
+                        line_id: lineId,
+                        line_icon_url: userIcon
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // LINEログインが成功した場合、トップページにリダイレクト
+                        // window.location.href = '/';
+                    } else {
+                        console.log('LINEログインエラー');
+                    }
+                })
+                .catch(error => {
+                    console.error('LINEログインエラー:', error);
+                });
+            })
+            .catch((err) => {
+                console.log('error', err);
+            });
+        }
+    })
+  </script>
 </body>
 </html>

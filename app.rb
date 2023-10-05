@@ -39,10 +39,10 @@ before do
       config.api_secret = ENV['CLOUDINARY_API_SECRET']  
       config.secure = true
     end
-    if  request.path != '/signin' && request.path != '/signup' && request.path != '/callback' && current_user.nil?
-      redirect '/signin'
-      puts "ログインしていないユーザーがアクセス redirect:/signin"
-    end
+    # if  request.path != '/signin' && request.path != '/signup' && request.path != '/callback' && current_user.nil?
+    #   redirect '/signin'
+    #   puts "ログインしていないユーザーがアクセス redirect:/signin"
+    # end
 end
 
 # ====== LINEBot ======
@@ -161,58 +161,89 @@ get '/' do
   erb :index
 end
 
-
-
-get '/signin' do
-  erb :sign_in
-end
-
-get '/signup' do
-  erb :sign_up
-end
-
-get '/signout' do
-  session[:user] = nil
-  redirect '/'
-end
-
-post '/signin' do
-  user = User.find_by(name: params[:name])
-    if user && user.authenticate(params[:password])
-        session[:user] = user.id
-        redirect '/'
-    else
-      puts "サインインできませんできた"
-      redirect '/signin'
-    end
-end
-
-post '/signup' do
-  if params[:upload_photo]
-     image = params[:upload_photo]
-     tempfile = image[:tempfile]
-     upload = Cloudinary::Uploader.upload(tempfile.path)
-     img_url = upload['url']
-  else
-    img_url = url('/images/hito.png')
+# ====== LINEログイン ユーザー情報を登録 ======
+post '/line_login' do
+  # LINEプロフィール情報を受け取り
+  request_body = JSON.parse(request.body.read)
+  
+   # JSONデータから必要な情報を抽出
+  line_name = request_body['line_name']
+  line_uid = request_body['line_id']
+  line_icon_url = request_body['line_icon_url']
+  
+  puts"LINEInfo: #{line_name},#{line_uid},#{line_icon_url}"
+  # 既存のユーザーをLINE IDで検索
+  user = User.find_by(line_uid: line_uid)
+  
+  if user.nil?
+    # LINE IDに対応するユーザーが存在しない場合、新規登録
+    user = User.create(
+      name: line_name,
+      line_uid: line_uid,
+      image: line_icon_url
+    )
+    puts "LINE IDが見つかりませんでした。新規ユーザー登録しました"
   end
   
-  user = User.create(
-        name: params[:name],
-        password: params[:password],
-        password_confirmation: params[:password_confirmation],
-        image: img_url
-    )
-    if user.persisted?
-      session[:user] = user.id
-      puts "サインアップ完了"
-      redirect '/'
-    else
-      puts "サインアップできませんでした"
-      redirect '/signup'
-    end
-    
+  if user.persisted?
+    session[:user] = user.id
+    puts "サインアップ完了LINEログイン完了"
+    redirect '/'
+  else
+    puts "サインアップできませんでした"
+  end
 end
+
+# get '/signin' do
+#   erb :sign_in
+# end
+
+# get '/signup' do
+#   erb :sign_up
+# end
+
+# get '/signout' do
+#   session[:user] = nil
+#   redirect '/'
+# end
+
+# post '/signin' do
+#   user = User.find_by(name: params[:name])
+#     if user && user.authenticate(params[:password])
+#         session[:user] = user.id
+#         redirect '/'
+#     else
+#       puts "サインインできませんできた"
+#       redirect '/signin'
+#     end
+# end
+
+# post '/signup' do
+#   if params[:upload_photo]
+#     image = params[:upload_photo]
+#     tempfile = image[:tempfile]
+#     upload = Cloudinary::Uploader.upload(tempfile.path)
+#     img_url = upload['url']
+#   else
+#     img_url = url('/images/hito.png')
+#   end
+  
+#   user = User.create(
+#         name: params[:name],
+#         password: params[:password],
+#         password_confirmation: params[:password_confirmation],
+#         image: img_url
+#     )
+#     if user.persisted?
+#       session[:user] = user.id
+#       puts "サインアップ完了"
+#       redirect '/'
+#     else
+#       puts "サインアップできませんでした"
+#       redirect '/signup'
+#     end
+    
+# end
 
 get '/user/record' do
   @user_rooms = current_user.rooms
