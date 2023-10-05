@@ -307,17 +307,21 @@ get '/room/:id' do
   end
   # 現在在室中のレコードのみを取得
   @current_entry_records = @todays_entry_records.where(exit_time: nil)
-   # ユーザーが最後に入室した記録を取得
-  @latest_entry = @room.entry_records.where(user_id: current_user.id, exit_time: nil).order(created_at: :desc).first
+  
+  if current_user
+     # ユーザーが最後に入室した記録を取得
+    @latest_entry = @room.entry_records.where(user_id: current_user.id, exit_time: nil).order(created_at: :desc).first
+  end
+
   erb :room
 end
 
 
-
-# /room/1/entry?user_id=2
-get '/room/:id/entry' do
-  room_id = params[:id]
-  p room_id
+# https://mieroom-production.up.railway.app/room/1/entry?user_id=1
+# https://mieroom-production.up.railway.app/room/1/exit?user_id=1
+# https://2f99-54-168-49-46.ngrok-free.app//room/:id/entry
+post '/room/entry' do
+  room_id = params[:room_id]
   room = Room.find_by(id: room_id)
   
   if room.nil?
@@ -355,9 +359,8 @@ get '/room/:id/entry' do
 end
 
 
-get '/room/:id/exit' do
-  room_id = params[:id]
-  p room_id
+post '/room/exit' do
+  room_id = params[:room_id]
   room = Room.find_by(id: room_id)
   
   if room.nil?
