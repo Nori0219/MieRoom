@@ -331,14 +331,14 @@ post '/room/entry' do
   end
   
   if current_user
-    user_id = current_user.id
+    line_uid = current_user.line_uid
   else
     #ログインせずpostメソッドを叩いた時,getメソッドでは出来た
-    user_id = params[:user_id]
+    line_uid = params[:line_uid]
     puts "外部からentry処理を実行"
   end
   
-  latest_entry_record = room.entry_records.where(user_id: user_id, exit_time: nil).order(created_at: :desc).first
+  latest_entry_record = room.entry_records.where(line_uid: line_uid, exit_time: nil).order(created_at: :desc).first
 
   if latest_entry_record
      puts'すでに入室しています'
@@ -370,13 +370,13 @@ post '/room/exit' do
   end
   
   if current_user
-    user_id = current_user.id
+    line_uid = current_user.line_uid
   else
-    user_id = params[:user_id]
+    line_uid = params[:line_uid]
     puts "外部からentry処理を実行"
   end
   # 最後に入室した記録を取得
-  @latest_entry_record = room.entry_records.where(user_id: user_id, exit_time: nil).order(created_at: :desc).first
+  @latest_entry_record = room.entry_records.where(line_uid: line_uid, exit_time: nil).order(created_at: :desc).first
 
   if @latest_entry_record
     # 退室時間を記録
