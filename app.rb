@@ -104,7 +104,6 @@ post '/callback' do
               room.image.sub!("http:", "https:")
             end
 
-
             # カルーセルの1つの要素を生成
             room_element = {
               "type": "bubble",
@@ -146,7 +145,7 @@ post '/callback' do
                         "color": "#1DB446"
                       }
                     ],
-                    "margin": "lg"
+                    "margin": "md"
                   },
                   {
                     "type": "box",
@@ -168,7 +167,7 @@ post '/callback' do
                     ],
                     "backgroundColor": "#F3F3F3",
                     "cornerRadius": "3px",
-                    "margin": "lg"
+                    "margin": "md"
                   },
                   {
                     "type": "box",
@@ -181,7 +180,7 @@ post '/callback' do
                           "label": "利用状況をみる",
                           "uri": "#{liff_url}/room/#{room.id}"
                         },
-                        "margin": "xxl",
+                        "margin": "lg",
                         "style": "primary"
                       },
                       {
@@ -200,24 +199,9 @@ post '/callback' do
               }
             }
 
-
-
             # カルーセルの内容に追加
             carousel_contents << room_element
           end
-          
-          # roominfo_message = {
-          #   type: 'text',
-          #   text: room_list_text
-          # }
-          # pr_message = {
-          #   type: 'text',
-          #   text: 
-          #   "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
-          # }
-          # messages = [roominfo_message, pr_message]
-
-          
 
           # カルーセルのFlex Messageを構築
           flex_message = {
@@ -228,52 +212,105 @@ post '/callback' do
               "contents": carousel_contents
             }
           }
+          
+          pr_message = {
+            type: 'text',
+            text: 
+            "📣本日の部屋状況はこちら！"
+          }
+          messages = [pr_message, flex_message]
 
-          puts flex_message
+          client.reply_message(event['replyToken'], messages)
 
-          client.reply_message(event['replyToken'], flex_message)
+        elsif  user_message == '自動入退機能'
+          
+        elsif  user_message == 'IDを確認する'
+          user_id = event['source']['userId']
+          carousel_contents = []
+          rooms = Room.all
 
-        else
-            # ユーザーがルーム名を送信した場合
-            room_name = user_message
-            # ルーム名を元にルームを検索
-            room = Room.find_by(name: room_name)
-            
-            if room
-                
-              # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
-              @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
-              @yesterday_morning_7am = @tokyo_now.beginning_of_day - 1.day + 7.hours
-              @tommorow_morning_7am = @tokyo_now.beginning_of_day + 1.day + 7.hours
-              # today_morning_7am = @tokyo_now.beginning_of_day + 7.hours
-              start_of_day = @tokyo_now.beginning_of_day + 7.hours
-              @tody_date=start_of_day.strftime('%m/%d %H:%M')
-              puts "レコード表示開始時刻：#{start_of_day}"
-              # 日本時間の昨日から今日の朝7時以降の入室記録を取得
-              if @tokyo_now < start_of_day
-                # 日付が7:00未満の場合、前日から今日の範囲
-                @todays_entry_records = room.entry_records.where('created_at >= ? AND created_at < ?',  @yesterday_morning_7am, start_of_day )
-              else
-                # 7:00以降の場合、今日から翌日の範囲
-                @todays_entry_records = room.entry_records.where('created_at >= ? AND created_at < ?',  start_of_day , @tommorow_morning_7am)
-              end
-              # 現在在室中のレコードのみを取得
-              @current_entry_records = @todays_entry_records.where(exit_time: nil)
-                roominfo_message = {
-                  type: 'text',
-                  text: 
-                  "【#{room.name}】\n現在の在室人数は#{@current_entry_records.count}人です！"
-                }
-                pr_message = {
-                  type: 'text',
-                  text: 
-                  "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
-                }
-                
-                messages = [roominfo_message, pr_message]
-
-                client.reply_message(event['replyToken'], messages)
+          rooms.each do |room|
+            #flexmessageで画像を送るにはhttpsに変換する必要がある
+            if room.image.start_with?("http:")
+              room.image.sub!("http:", "https:")
             end
+
+            room_element = {
+              "type": "bubble",
+              "size": "deca",
+              "hero": {
+                "type": "image",
+                "url": room.image,
+                "size": "full",
+                "aspectMode": "cover",
+                "aspectRatio": "320:213"
+              },
+              "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": room.name,
+                    "weight": "bold",
+                    "size": "md",
+                    "wrap": true
+                  },
+                  {
+                    "type": "box",
+                    "layout": "baseline",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": "ルーム番号",
+                        "size": "md",
+                        "margin": "none",
+                        "color": "#8c8c8c"
+                      },
+                      {
+                        "type": "text",
+                        "text": "#{room.id}",
+                        "size": "xxl",
+                        "margin": "xxl",
+                        "weight": "bold",
+                        "color": "#1DB446"
+                      }
+                    ],
+                    "margin": "md"
+                  },
+                ],
+                "spacing": "sm",
+                "paddingAll": "13px"
+              }
+            }
+            # カルーセルの内容に追加
+            carousel_contents << room_element
+          end
+
+          # カルーセルのFlex Messageを構築
+          flex_roomID_message = {
+            "type": "flex",
+            "altText": "ルーム番号",
+            "contents": {
+              "type": "carousel",
+              "contents": carousel_contents
+            }
+          }
+
+          info_message = {
+            type: 'text',
+            text: '📢 以下のユーザーIDとルーム番号をコピーしてください！'
+          }
+
+          id_message = {
+            type: 'text',
+            text: user_id
+          }
+
+          messages = [info_message, id_message, flex_roomID_message]
+          client.reply_message(event['replyToken'], messages)
+        else
+
         end
       end
     end
