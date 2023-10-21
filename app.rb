@@ -28,7 +28,10 @@ helpers do
   def format_exit_time(entry_record)
     entry_record.exit_time.in_time_zone('Asia/Tokyo').strftime('%H:%M')
   end
-  
+
+  def liff_url
+    "https://liff.line.me/2000904186-6yN4M2vP"
+  end
 end
 
 before do
@@ -68,10 +71,11 @@ post '/callback' do
         user_message = event.message['text']
   
         if user_message == '部屋状況を確認する'
+          # カルーセルの内容を格納する配列
+          carousel_contents = []
           rooms = Room.all
-          # ルーム名を取得して改行で区切る
-          # ルーム名を取得して一覧形式のテキストを作成
-          room_list_text = "現在の部屋状況はこちらです！\n【ルーム一覧】"
+
+          # room_list_text = "現在の部屋状況はこちらです！\n【ルーム一覧】"
           
           # 日本時間の今日の朝7時を取得(UTCとの誤差は+9.hours)
           @tokyo_now = Time.now.in_time_zone('Asia/Tokyo')
@@ -93,21 +97,142 @@ post '/callback' do
             end
             # 現在在室中のレコードのみを取得
             @current_entry_records = @todays_entry_records.where(exit_time: nil)
-            room_list_text += "\n#{room.name}：#{@current_entry_records.count}人"
+            # room_list_text += "\n#{room.name}：#{@current_entry_records.count}人"
+
+            #flexmessageで画像を送るにはhttpsに変換する必要がある
+            if room.image.start_with?("http:")
+              room.image.sub!("http:", "https:")
+            end
+
+
+            # カルーセルの1つの要素を生成
+            room_element = {
+              "type": "bubble",
+              "size": "hecto",
+              "hero": {
+                "type": "image",
+                "url": room.image,
+                "size": "full",
+                "aspectMode": "cover",
+                "aspectRatio": "320:213"
+              },
+              "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": room.name,
+                    "weight": "bold",
+                    "size": "lg",
+                    "wrap": true
+                  },
+                  {
+                    "type": "box",
+                    "layout": "baseline",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": "現在の利用者",
+                        "size": "md",
+                        "margin": "none"
+                      },
+                      {
+                        "type": "text",
+                        "text": "#{@current_entry_records.count}人",
+                        "size": "xl",
+                        "margin": "md",
+                        "weight": "bold",
+                        "color": "#1DB446"
+                      }
+                    ],
+                    "margin": "lg"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "box",
+                        "layout": "vertical",
+                        "contents": [
+                          {
+                            "type": "filler"
+                          }
+                        ],
+                        "width": "#{@current_entry_records.count}0%",
+                        "height": "8px",
+                        "backgroundColor": "#29BA74",
+                        "cornerRadius": "4px"
+                      }
+                    ],
+                    "backgroundColor": "#F3F3F3",
+                    "cornerRadius": "3px",
+                    "margin": "lg"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                      {
+                        "type": "button",
+                        "action": {
+                          "type": "uri",
+                          "label": "利用状況をみる",
+                          "uri": "#{liff_url}/room/#{room.id}"
+                        },
+                        "margin": "xxl",
+                        "style": "primary"
+                      },
+                      {
+                        "type": "text",
+                        "text": "当日7:00~翌日6:59までの利用者情報",
+                        "size": "xxs",
+                        "margin": "md",
+                        "align": "center",
+                        "color": "#aaaaaa"
+                      }
+                    ]
+                  }
+                ],
+                "spacing": "sm",
+                "paddingAll": "13px"
+              }
+            }
+
+
+
+            # カルーセルの内容に追加
+            carousel_contents << room_element
           end
           
-          roominfo_message = {
-            type: 'text',
-            text: room_list_text
-          }
-          pr_message = {
-            type: 'text',
-            text: 
-            "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
-          }
-          messages = [roominfo_message, pr_message]
+          # roominfo_message = {
+          #   type: 'text',
+          #   text: room_list_text
+          # }
+          # pr_message = {
+          #   type: 'text',
+          #   text: 
+          #   "【📣本日の利用者状況】\nユーザー登録するとメニューから誰が利用したか確認できます！"
+          # }
+          # messages = [roominfo_message, pr_message]
+
           
-          client.reply_message(event['replyToken'], messages)
+
+          # カルーセルのFlex Messageを構築
+          flex_message = {
+            "type": "flex",
+            "altText": "部屋状況",
+            "contents": {
+              "type": "carousel",
+              "contents": carousel_contents
+            }
+          }
+
+          puts flex_message
+
+          client.reply_message(event['replyToken'], flex_message)
+
         else
             # ユーザーがルーム名を送信した場合
             room_name = user_message
@@ -146,6 +271,7 @@ post '/callback' do
                 }
                 
                 messages = [roominfo_message, pr_message]
+
                 client.reply_message(event['replyToken'], messages)
             end
         end
@@ -193,57 +319,6 @@ post '/line_login' do
     puts "サインアップできませんでした"
   end
 end
-
-# get '/signin' do
-#   erb :sign_in
-# end
-
-# get '/signup' do
-#   erb :sign_up
-# end
-
-# get '/signout' do
-#   session[:user] = nil
-#   redirect '/'
-# end
-
-# post '/signin' do
-#   user = User.find_by(name: params[:name])
-#     if user && user.authenticate(params[:password])
-#         session[:user] = user.id
-#         redirect '/'
-#     else
-#       puts "サインインできませんできた"
-#       redirect '/signin'
-#     end
-# end
-
-# post '/signup' do
-#   if params[:upload_photo]
-#     image = params[:upload_photo]
-#     tempfile = image[:tempfile]
-#     upload = Cloudinary::Uploader.upload(tempfile.path)
-#     img_url = upload['url']
-#   else
-#     img_url = url('/images/hito.png')
-#   end
-  
-#   user = User.create(
-#         name: params[:name],
-#         password: params[:password],
-#         password_confirmation: params[:password_confirmation],
-#         image: img_url
-#     )
-#     if user.persisted?
-#       session[:user] = user.id
-#       puts "サインアップ完了"
-#       redirect '/'
-#     else
-#       puts "サインアップできませんでした"
-#       redirect '/signup'
-#     end
-    
-# end
 
 get '/user/record' do
   @user_rooms = current_user.rooms
