@@ -222,8 +222,6 @@ post '/callback' do
 
           client.reply_message(event['replyToken'], messages)
 
-        elsif  user_message == '自動入退機能'
-          
         elsif  user_message == 'IDを確認する'
           user_id = event['source']['userId']
           carousel_contents = []
@@ -307,7 +305,7 @@ post '/callback' do
             text: user_id
           }
 
-          messages = [info_message, id_message, flex_roomID_message]
+          messages = [id_message, flex_roomID_message]
           client.reply_message(event['replyToken'], messages)
         else
 
